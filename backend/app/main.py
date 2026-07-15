@@ -4,6 +4,8 @@ from app.routers.auth import router as auth_router
 
 from app.database.database import Base, engine
 from app.models.user import User
+from app.models.knowledge import KnowledgeItem
+from app.routers.knowledge import router as knowledge_router
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
@@ -13,6 +15,7 @@ app = FastAPI(
     version="1.0.0"
 )
 app.include_router(auth_router)
+app.include_router(knowledge_router)
 
 origins = [
     "http://localhost:5173"

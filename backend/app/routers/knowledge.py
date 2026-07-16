@@ -7,14 +7,16 @@ from app.models.user import User
 from app.schemas.knowledge import (
     KnowledgeCreate,
     KnowledgeUpdate,
-    KnowledgeResponse
+    KnowledgeResponse,
+    URLRequest
 )
 from app.services.knowledge_service import (
     create_knowledge,
     get_user_knowledge,
     get_knowledge_by_id,
     update_knowledge,
-    delete_knowledge
+    delete_knowledge,
+    create_knowledge_from_url
 )
 from typing import List
 
@@ -23,6 +25,17 @@ router = APIRouter(
     tags=["Knowledge"]
 )
 
+@router.post("/url", response_model=KnowledgeResponse)
+def save_from_url(
+    url_request: URLRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return create_knowledge_from_url(
+        db,
+        url_request,
+        current_user
+    )
 
 @router.post("/", response_model=KnowledgeResponse)
 def save_knowledge(

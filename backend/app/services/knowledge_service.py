@@ -3,10 +3,13 @@ from sqlalchemy.orm import Session
 from app.models.knowledge import KnowledgeItem
 from app.schemas.knowledge import (
     KnowledgeCreate,
-    KnowledgeUpdate
+    KnowledgeUpdate,
+    URLRequest
 )
 from app.models.user import User
-
+from app.extractors.factory import get_extractor
+from app.utils.url_detector import detect_source_type
+from app.services.ai_service import generate_summary
 
 def create_knowledge(
     db: Session,
@@ -100,3 +103,37 @@ def delete_knowledge(
     db.commit()
 
     return True
+
+def create_knowledge_from_url(
+    db: Session,
+    url_request: URLRequest,
+    current_user: User
+):
+    extractor = get_extractor(
+        url_request.url
+    )
+
+    extracted_data = extractor.extract(
+        url_request.url
+    )
+    summary = generate_summary(
+    extracted_data["raw_text"]
+)
+    source_type = detect_source_type(
+    url_request.url
+)
+
+    knowledge = KnowledgeItem(
+        title=extracted_data["title"],
+        source_type=source_type,
+        source_url=url_request.url,
+        raw_text=extracted_data["raw_text"],
+        summary=summary,
+        user_id=current_user.id
+    )
+
+    db.add(knowledge)
+    db.commit()
+    db.refresh(knowledge)
+
+    return knowledge

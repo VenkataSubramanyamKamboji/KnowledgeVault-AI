@@ -26,3 +26,6 @@ class KnowledgeUpdate(BaseModel):
     source_type: str
     source_url: Optional[str] = None
     raw_text: Optional[str] = None
+
+class URLRequest(BaseModel):
+    url: str

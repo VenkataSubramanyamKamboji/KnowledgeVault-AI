@@ -11,16 +11,25 @@ client = genai.Client(
 
 
 def generate_summary(text: str) -> str:
+    MAX_CHARS = 10000
+    text = text[:MAX_CHARS]
 
     prompt = f"""
-Summarize the following content in 5 concise bullet points.
+You are an AI assistant for a personal knowledge management system.
 
+Analyze the following content and provide:
+
+1. A concise summary (4-6 sentences).
+2. Five key points as bullet points.
+3. Three to five relevant tags.
+
+Content:
 {text}
 """
 
     response = client.models.generate_content(
-    model="gemini-flash-latest",
-    contents=prompt,
-)
+        model="gemini-flash-latest",
+        contents=prompt,
+    )
 
     return response.text

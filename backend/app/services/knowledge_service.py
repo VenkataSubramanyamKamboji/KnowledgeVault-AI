@@ -10,6 +10,7 @@ from app.models.user import User
 from app.extractors.factory import get_extractor
 from app.utils.url_detector import detect_source_type
 from app.services.ai_service import generate_summary
+from app.services.ai_service import generate_summary
 
 def create_knowledge(
     db: Session,
@@ -122,6 +123,7 @@ def create_knowledge_from_url(
     source_type = detect_source_type(
     url_request.url
 )
+    
 
     knowledge = KnowledgeItem(
         title=extracted_data["title"],

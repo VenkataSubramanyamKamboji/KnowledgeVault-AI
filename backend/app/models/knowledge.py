@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    ForeignKey,
+    DateTime,
+    JSON,
+)
 from datetime import datetime
 
 from app.database.database import Base
@@ -24,6 +32,11 @@ class KnowledgeItem(Base):
     raw_text = Column(Text, nullable=True)
 
     summary = Column(Text, nullable=True)
+
+    ai_metadata = Column(
+    JSON,
+    nullable=True
+)
 
     created_at = Column(
         DateTime,

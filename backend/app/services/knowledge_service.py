@@ -9,8 +9,11 @@ from app.schemas.knowledge import (
 from app.models.user import User
 from app.extractors.factory import get_extractor
 from app.utils.url_detector import detect_source_type
-from app.services.ai_service import generate_summary
-from app.services.ai_service import generate_summary
+from app.services.ai_service import generate_ai_metadata
+from app.services.embedding_service import generate_embeddings
+from app.vectorstore.chroma_db import collection
+from app.utils.text_chunker import chunk_text
+
 
 def create_knowledge(
     db: Session,
@@ -117,25 +120,58 @@ def create_knowledge_from_url(
     extracted_data = extractor.extract(
         url_request.url
     )
-    summary = generate_summary(
-    extracted_data["raw_text"]
-)
+
+    ai_result = generate_ai_metadata(
+        extracted_data["raw_text"]
+    )
+
     source_type = detect_source_type(
-    url_request.url
-)
-    
+        url_request.url
+    )
 
     knowledge = KnowledgeItem(
         title=extracted_data["title"],
         source_type=source_type,
         source_url=url_request.url,
         raw_text=extracted_data["raw_text"],
-        summary=summary,
+        summary=ai_result.summary,
+        ai_metadata={
+            "key_points": ai_result.key_points,
+            "tags": ai_result.tags,
+        },
         user_id=current_user.id
     )
 
     db.add(knowledge)
     db.commit()
     db.refresh(knowledge)
+    # Split the extracted text into chunks
+    chunks = chunk_text(extracted_data["raw_text"])
+
+    if not chunks:
+        return knowledge
+
+    # Generate embeddings for each chunk
+    embeddings = generate_embeddings(chunks)
+
+    # Store all chunks in ChromaDB
+    collection.add(
+        ids=[
+            f"{knowledge.id}_{i}"
+            for i in range(len(chunks))
+        ],
+        documents=chunks,
+        embeddings=embeddings,
+        metadatas=[
+            {
+                "knowledge_id": knowledge.id,
+                "chunk_index": i,
+                "title": knowledge.title,
+                "source_url": knowledge.source_url,
+                "user_id": knowledge.user_id,
+            }
+            for i in range(len(chunks))
+        ],
+    )
 
     return knowledge

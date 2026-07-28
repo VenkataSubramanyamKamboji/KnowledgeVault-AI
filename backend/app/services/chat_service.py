@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.services.search_service import semantic_search
@@ -9,9 +10,12 @@ def chat(
     question: str,
     top_k: int = 3,
 ):
-    results = semantic_search(
-        query=question,
-        top_k=top_k,
+    try:
+        results = semantic_search(question, top_k)
+    except Exception as e:
+        raise HTTPException(
+        status_code=500,
+        detail=f"Search failed: {str(e)}"
     )
 
     # print("\n===== SEARCH RESULTS =====")
@@ -37,9 +41,12 @@ def chat(
 
     context = "\n\n".join(valid_documents)
 
-    answer = answer_with_context(
-        question=question,
-        context=context,
+    try:
+        answer = answer_with_context(question, context)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate answer: {str(e)}"
     )
 
     metadata = results.get("metadatas", [[]])[0]

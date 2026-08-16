@@ -1,0 +1,40 @@
+# Development Dockerfile with hot-reload support
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies and Node.js
+RUN apt-get update && apt-get install -y \
+    gcc \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python requirements
+COPY backend/requirements.txt .
+
+# Install Python dependencies with development packages
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir python-dotenv pytest httpx
+
+# Copy backend
+COPY backend/ ./backend/
+
+# Copy frontend
+COPY frontend/ ./frontend/
+
+# Install frontend dependencies
+WORKDIR /app/frontend
+RUN npm install
+
+WORKDIR /app
+
+# Set environment
+ENV PYTHONUNBUFFERED=1
+
+# Expose ports
+EXPOSE 8000 5173
+
+# Default command (can be overridden)
+CMD ["python", "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

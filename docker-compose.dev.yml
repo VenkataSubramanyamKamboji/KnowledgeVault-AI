@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  knowledgevault-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_ENV=development
+    networks:
+      - knowledgevault-network
+    command: bash -c "cd /app && python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+networks:
+  knowledgevault-network:
+    driver: bridge
